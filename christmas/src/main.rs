@@ -12,12 +12,17 @@ fn main() {
         "Nine ladies dancing",
         "Ten lords a-leaping",
         "Eleven pipers piping",
-        "Twelve drummers drumming"
+        "Twelve drummers drumming",
     ];
 
-    for i in 0..gifts.len() {
-        for j in 0..i {
-            println!("{}", gifts[j]);
+    for i in 1..gifts.len() {
+        println!("On the first day of Christmas, my true love sent to me");
+        for j in (0..i).rev() {
+            if j == 1 {
+                println!("{}, and", gifts[j]);
+            } else {
+                println!("{}", gifts[j]);
+            }
         }
         println!("");
     }
