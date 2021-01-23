@@ -19,11 +19,15 @@ fn main() {
                 println!("Welcome to the employee database");
                 println!("(l) List employees");
                 println!("(a) Add/edit employee");
+                println!("(q) Quit");
 
                 let command = read_input();
 
                 if command == "a" {
                     change_state(&mut state, State::NewEmployee)
+                } else if command == "q" {
+                    println!("Bye bye 👋");
+                    break;
                 }
             }
             State::NewEmployee => {
