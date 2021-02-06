@@ -10,5 +10,6 @@ fn main() {
     assert_eq!("", post.content());
 
     post.approve();
+    post.approve();
     assert_eq!("Rust is a pretty cool language", post.content());
 }
