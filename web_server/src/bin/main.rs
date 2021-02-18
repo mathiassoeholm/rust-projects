@@ -22,12 +22,13 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 512];
 
-    stream.read(&mut buffer).unwrap();
-
     let get = b"GET / HTTP/1.1\r\n";
     let sleep = b"GET /sleep HTTP/1.1\r\n";
 
-    let (status_line, filename) = if buffer.starts_with(get) {
+    let (status_line, filename) = if let Err(_) = stream.read(&mut buffer) {
+        println!("Error reading the TCP buffer");
+        ("HTTP/1.1 500 Internal Server Error", "500.html")
+    } else if buffer.starts_with(get) {
         ("HTTP/1.1 200 OK", "hello.html")
     } else if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(5));
