@@ -59,6 +59,14 @@ impl ThreadPool {
   //   }
   // }
 
+  /// Executes the provided function on the next available threadpool worker
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let pool = ThreadPool::new(4);
+  /// pool.execute(|| { println!("doing some work"); });
+  /// ```
   pub fn execute<F>(&self, f: F)
   where
     F: FnOnce() + Send + 'static,
