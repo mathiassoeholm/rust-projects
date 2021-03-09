@@ -1,7 +1,16 @@
 mod utils;
 
+use std::convert::TryInto;
 use std::fmt;
 use wasm_bindgen::prelude::*;
+use web_sys;
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -122,6 +131,75 @@ impl Universe {
         Universe {
             width,
             height,
+            cells,
+        }
+    }
+    pub fn single_spaceship() -> Universe {
+        let width = 64;
+        let height = 64;
+
+        let ship = "___■■__■■___\n\
+                    _____■■_____\n\
+                    _____■■_____\n\
+                    __■_■__■_■__\n\
+                    __■______■__\n\
+                    ____________\n\
+                    __■______■__\n\
+                    ___■■__■■___\n\
+                    ____■■■■____\n\
+                    ____________\n\
+                    _____■■_____\n\
+                    _____■■_____";
+
+        // - Calculate ship width and height
+        let ship_lines: Vec<&str> = ship.split('\n').collect();
+        let ship_width: i32 = ship_lines[0].chars().count().try_into().unwrap();
+        let ship_height: i32 = ship_lines.len().try_into().unwrap();
+
+        log!("shipLines {:?}", ship_lines);
+        log!("shipWidth {:?}", ship_width);
+        log!("shipHeight {:?}", ship_height);
+        // - Start ship at width/2-shipWidth/2, height/2-shipHeight/2
+        let ship_start = (width / 2 - ship_width / 2, height / 2 - ship_height / 2);
+        // - Coord to ship cord? x: x-shipStart.x, y: y-shipStart.y
+        // - Set cell to alive or dead
+
+        let cells = (0..width * height)
+            .map(|i| {
+                let x = i % width;
+                let y = i / height;
+                // log!("x {}, y {}", x, y);
+                let ship_coord: (i32, i32) = (x - ship_start.0, y - ship_start.1);
+                if ship_coord.0 >= 0
+                    && ship_coord.0 < ship_width
+                    && ship_coord.1 >= 0
+                    && ship_coord.1 < ship_height
+                {
+                    log!(
+                        "{:?}, {:?}",
+                        ship_lines[ship_coord.1 as usize]
+                            .chars()
+                            .nth(ship_coord.0 as usize),
+                        ship_coord
+                    );
+                    if ship_lines[ship_coord.1 as usize]
+                        .chars()
+                        .nth(ship_coord.0 as usize)
+                        == Some('■')
+                    {
+                        Cell::Alive
+                    } else {
+                        Cell::Dead
+                    }
+                } else {
+                    Cell::Dead
+                }
+            })
+            .collect();
+
+        Universe {
+            width: width as u32,
+            height: height as u32,
             cells,
         }
     }
