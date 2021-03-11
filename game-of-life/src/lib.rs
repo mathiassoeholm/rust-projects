@@ -1,5 +1,6 @@
 mod utils;
 
+use js_sys::Math;
 use std::convert::TryInto;
 use std::fmt;
 use wasm_bindgen::prelude::*;
@@ -134,6 +135,27 @@ impl Universe {
             cells,
         }
     }
+    pub fn random() -> Universe {
+        let width = 100;
+        let height = 100;
+
+        let cells = (0..width * height)
+            .map(|_| {
+                if Math::random() < 0.5 {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+            .collect();
+
+        Universe {
+            width,
+            height,
+            cells,
+        }
+    }
+
     pub fn single_spaceship() -> Universe {
         let width = 64;
         let height = 64;
@@ -151,25 +173,18 @@ impl Universe {
                     _____■■_____\n\
                     _____■■_____";
 
-        // - Calculate ship width and height
         let ship_lines: Vec<&str> = ship.split('\n').collect();
         let ship_width: i32 = ship_lines[0].chars().count().try_into().unwrap();
         let ship_height: i32 = ship_lines.len().try_into().unwrap();
 
-        log!("shipLines {:?}", ship_lines);
-        log!("shipWidth {:?}", ship_width);
-        log!("shipHeight {:?}", ship_height);
-        // - Start ship at width/2-shipWidth/2, height/2-shipHeight/2
         let ship_start = (width / 2 - ship_width / 2, height / 2 - ship_height / 2);
-        // - Coord to ship cord? x: x-shipStart.x, y: y-shipStart.y
-        // - Set cell to alive or dead
 
         let cells = (0..width * height)
             .map(|i| {
                 let x = i % width;
                 let y = i / height;
-                // log!("x {}, y {}", x, y);
                 let ship_coord: (i32, i32) = (x - ship_start.0, y - ship_start.1);
+
                 if ship_coord.0 >= 0
                     && ship_coord.0 < ship_width
                     && ship_coord.1 >= 0
