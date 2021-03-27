@@ -1,5 +1,6 @@
 mod utils;
 
+use fixedbitset::FixedBitSet;
 use js_sys::Math;
 use std::convert::TryInto;
 use std::fmt;
@@ -19,19 +20,14 @@ macro_rules! log {
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
-#[repr(u8)] // Represent each cell as a single byte
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
-    Dead = 0,
-    Alive = 1,
-}
+const DEAD: bool = false;
+const ALIVE: bool = true;
 
 #[wasm_bindgen]
 pub struct Universe {
     width: u32,
     height: u32,
-    cells: Vec<Cell>,
+    cells: FixedBitSet,
 }
 
 impl Universe {
@@ -57,19 +53,19 @@ impl Universe {
     }
 }
 
-impl fmt::Display for Universe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.cells.as_slice().chunks(self.width as usize) {
-            for &cell in line {
-                let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
-                write!(f, "{}", symbol)?;
-            }
-            write!(f, "\n")?;
-        }
+// impl fmt::Display for Universe {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         for line in self.cells.as_slice().chunks(self.width as usize) {
+//             for &cell in line {
+//                 let symbol = if cell == DEAD { '◻' } else { '◼' };
+//                 write!(f, "{}", symbol)?;
+//             }
+//             write!(f, "\n")?;
+//         }
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }
 
 // Public methods, exported to JavaScript
 #[wasm_bindgen]
@@ -82,8 +78,8 @@ impl Universe {
         self.height
     }
 
-    pub fn cells(&self) -> *const Cell {
-        self.cells.as_ptr()
+    pub fn cells(&self) -> *const u32 {
+        self.cells.as_slice().as_ptr()
     }
 
     pub fn tick(&mut self) {
@@ -97,68 +93,66 @@ impl Universe {
 
                 let next_cell = match (cell, live_neighbors) {
                     // Rule 1 (Underpopulation)
-                    (Cell::Alive, x) if x < 2 => Cell::Dead,
+                    (ALIVE, x) if x < 2 => DEAD,
                     // Rule 2 (Survive)
-                    (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
+                    (ALIVE, 2) | (ALIVE, 3) => ALIVE,
                     // Rule 3 (Overpopulation)
-                    (Cell::Alive, x) if x > 3 => Cell::Dead,
+                    (ALIVE, x) if x > 3 => DEAD,
                     // Rule 4 (Reproduction)
-                    (Cell::Dead, 3) => Cell::Alive,
+                    (DEAD, 3) => ALIVE,
                     // All other cells are unchanged
                     (otherwise, _) => otherwise,
                 };
 
-                next[idx] = next_cell;
+                next.set(idx, next_cell);
             }
         }
 
         self.cells = next;
     }
 
-    pub fn new() -> Universe {
-        let width = 64;
-        let height = 64;
+    // pub fn new() -> Universe {
+    //     let width = 64;
+    //     let height = 64;
 
-        let cells = (0..width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
+    //     let cells = (0..width * height)
+    //         .map(|i| {
+    //             if i % 2 == 0 || i % 7 == 0 {
+    //                 ALIVE
+    //             } else {
+    //                DEAD
+    //             }
+    //         })
+    //         .collect();
 
-        Universe {
-            width,
-            height,
-            cells,
-        }
-    }
+    //     Universe {
+    //         width,
+    //         height,
+    //         cells,
+    //     }
+    // }
     pub fn random() -> Universe {
         let width = 100;
         let height = 100;
 
-        let cells = (0..width * height)
-            .map(|_| {
-                if Math::random() < 0.5 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
+        let mut cells = FixedBitSet::with_capacity(width * height);
+
+        for i in 0..width * height {
+            cells.set(i, if Math::random() < 0.5 { ALIVE } else { DEAD });
+        }
 
         Universe {
-            width,
-            height,
+            width: width as u32,
+            height: height as u32,
             cells,
         }
     }
 
     pub fn single_spaceship() -> Universe {
-        let width = 64;
-        let height = 64;
+        let width: i32 = 64;
+        let height: i32 = 64;
+
+        let mut cells = FixedBitSet::with_capacity((width * height) as usize);
 
         let ship = "___■■__■■___\n\
                     _____■■_____\n\
@@ -179,47 +173,36 @@ impl Universe {
 
         let ship_start = (width / 2 - ship_width / 2, height / 2 - ship_height / 2);
 
-        let cells = (0..width * height)
-            .map(|i| {
-                let x = i % width;
-                let y = i / height;
-                let ship_coord: (i32, i32) = (x - ship_start.0, y - ship_start.1);
+        for i in 0..width * height {
+            let x = i % width;
+            let y = i / height;
+            let ship_coord: (i32, i32) = (x - ship_start.0, y - ship_start.1);
 
-                if ship_coord.0 >= 0
-                    && ship_coord.0 < ship_width
-                    && ship_coord.1 >= 0
-                    && ship_coord.1 < ship_height
+            let cell = if ship_coord.0 >= 0
+                && ship_coord.0 < ship_width
+                && ship_coord.1 >= 0
+                && ship_coord.1 < ship_height
+            {
+                if ship_lines[ship_coord.1 as usize]
+                    .chars()
+                    .nth(ship_coord.0 as usize)
+                    == Some('■')
                 {
-                    log!(
-                        "{:?}, {:?}",
-                        ship_lines[ship_coord.1 as usize]
-                            .chars()
-                            .nth(ship_coord.0 as usize),
-                        ship_coord
-                    );
-                    if ship_lines[ship_coord.1 as usize]
-                        .chars()
-                        .nth(ship_coord.0 as usize)
-                        == Some('■')
-                    {
-                        Cell::Alive
-                    } else {
-                        Cell::Dead
-                    }
+                    ALIVE
                 } else {
-                    Cell::Dead
+                    DEAD
                 }
-            })
-            .collect();
+            } else {
+                DEAD
+            };
+
+            cells.set(i as usize, cell);
+        }
 
         Universe {
             width: width as u32,
             height: height as u32,
             cells,
         }
-    }
-
-    pub fn render(&self) -> String {
-        self.to_string()
     }
 }

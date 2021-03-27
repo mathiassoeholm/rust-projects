@@ -1,4 +1,4 @@
-import { Universe, Cell } from "game-of-life";
+import { Universe } from "game-of-life";
 import { memory } from "game-of-life/game_of_life_bg";
 
 const CELL_SIZE = 5; // px
@@ -6,7 +6,7 @@ const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
 
-const universe = Universe.random();
+const universe = Universe.single_spaceship();
 const width = universe.width();
 const height = universe.height();
 
@@ -48,9 +48,15 @@ const getIndex = (row, column) => {
   return row * width + column;
 };
 
+const getBit = (i, array) => {
+  const byte = array[Math.floor(i / 8)];
+  const offset = i % 8;
+  return (byte & (1 << offset)) === 1 << offset;
+};
+
 const drawCells = () => {
   const cellsPtr = universe.cells();
-  const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+  const cells = new Uint8Array(memory.buffer, cellsPtr, (width * height) / 8);
 
   ctx.beginPath();
 
@@ -58,7 +64,7 @@ const drawCells = () => {
     for (let col = 0; col < width; col++) {
       const idx = getIndex(row, col);
 
-      ctx.fillStyle = cells[idx] === Cell.Dead ? DEAD_COLOR : ALIVE_COLOR;
+      ctx.fillStyle = getBit(idx, cells) ? ALIVE_COLOR : DEAD_COLOR;
 
       ctx.fillRect(
         col * (CELL_SIZE + 1) + 1,
