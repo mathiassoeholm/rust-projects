@@ -1,5 +1,6 @@
 mod utils;
 
+use crate::utils::set_panic_hook;
 use js_sys::Math;
 use std::convert::TryInto;
 use std::fmt;
@@ -69,6 +70,11 @@ impl fmt::Display for Universe {
 
         Ok(())
     }
+}
+
+#[wasm_bindgen]
+pub fn init() {
+    set_panic_hook();
 }
 
 // Public methods, exported to JavaScript
