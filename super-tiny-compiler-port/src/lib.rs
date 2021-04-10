@@ -1,3 +1,5 @@
+use regex::Regex;
+
 #[derive(Debug, PartialEq)]
 pub enum TokenKind {
   Paren,
@@ -14,20 +16,47 @@ pub struct Token {
 pub fn tokenizer(input: &str) -> Vec<Token> {
   let mut current = 0;
   let mut tokens = Vec::new();
+  let white_space_regex = Regex::new(r"\s").unwrap();
+  let number_regex = Regex::new(r"[0-9]").unwrap();
 
   let chars: Vec<char> = input.chars().collect();
   while current < input.len() {
-    let ch = chars[current];
+    let mut ch = chars[current];
 
-    if ch == '(' {
+    if ch == '(' || ch == ')' {
       tokens.push(Token {
         kind: TokenKind::Paren,
-        value: String::from("("),
-      })
+        value: String::from(ch),
+      });
+
+      current += 1;
+      continue;
+    }
+
+    if white_space_regex.is_match(&String::from(ch)) {
+      current += 1;
+      continue;
+    }
+
+    if number_regex.is_match(&String::from(ch)) {
+      let mut value = Vec::new();
+
+      while number_regex.is_match(&String::from(ch)) {
+        value.push(ch);
+        current += 1;
+        ch = chars[current];
+      }
+
+      tokens.push(Token {
+        kind: TokenKind::Number,
+        value: value.iter().collect(),
+      });
+
+      current += 1;
+      continue;
     }
 
     current += 1;
-    continue;
   }
 
   return tokens;

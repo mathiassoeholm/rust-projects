@@ -5,7 +5,7 @@ use super_tiny_compiler::TokenKind;
 #[test]
 fn it_returns_tokens() {
   assert_eq!(
-    tokenizer("(add 2 (subtract 4 2))"),
+    tokenizer("(add 21 (subtract 4 2))"),
     vec!(
       Token {
         kind: TokenKind::Paren,
@@ -17,7 +17,7 @@ fn it_returns_tokens() {
       },
       Token {
         kind: TokenKind::Number,
-        value: String::from("2")
+        value: String::from("21")
       },
       Token {
         kind: TokenKind::Paren,
