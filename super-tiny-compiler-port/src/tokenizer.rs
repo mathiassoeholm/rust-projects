@@ -1,18 +1,5 @@
+use super::models::{Token, TokenKind};
 use regex::Regex;
-
-#[derive(Debug, PartialEq)]
-pub enum TokenKind {
-  Paren,
-  Name,
-  Number,
-  String,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Token {
-  pub kind: TokenKind,
-  pub value: String,
-}
 
 pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
   let mut current = 0;

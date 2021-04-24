@@ -1,3 +1,4 @@
+use super_tiny_compiler::models::{Token, TokenKind};
 use super_tiny_compiler::tokenizer::*;
 
 #[test]
