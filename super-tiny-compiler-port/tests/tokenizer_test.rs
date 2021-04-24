@@ -1,6 +1,4 @@
-use super_tiny_compiler::tokenizer;
-use super_tiny_compiler::Token;
-use super_tiny_compiler::TokenKind;
+use super_tiny_compiler::tokenizer::*;
 
 #[test]
 fn it_returns_tokens() {
