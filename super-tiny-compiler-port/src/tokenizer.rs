@@ -1,4 +1,4 @@
-use super::models::{Token, TokenKind};
+use super::models::Token;
 use regex::Regex;
 
 pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
@@ -13,8 +13,7 @@ pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
     let mut ch = chars[current];
 
     if ch == '(' || ch == ')' {
-      tokens.push(Token {
-        kind: TokenKind::Paren,
+      tokens.push(Token::Paren {
         value: String::from(ch),
       });
 
@@ -36,8 +35,7 @@ pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
         ch = chars[current];
       }
 
-      tokens.push(Token {
-        kind: TokenKind::Number,
+      tokens.push(Token::Number {
         value: value.iter().collect(),
       });
 
@@ -56,8 +54,7 @@ pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
         ch = chars[current];
       }
 
-      tokens.push(Token {
-        kind: TokenKind::String,
+      tokens.push(Token::String {
         value: value.iter().collect(),
       });
 
@@ -73,8 +70,7 @@ pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
         ch = chars[current];
       }
 
-      tokens.push(Token {
-        kind: TokenKind::Name,
+      tokens.push(Token::Name {
         value: value.iter().collect(),
       });
 

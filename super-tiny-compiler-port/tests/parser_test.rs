@@ -1,20 +1,36 @@
-use super_tiny_compiler::models::{Ast, Node, Token, TokenKind};
+use super_tiny_compiler::models::{Ast, Node, Token};
 use super_tiny_compiler::parser::*;
 
 #[test]
 fn it_returns_ast() {
   assert_eq!(
-    vec!(Token {
-      kind: TokenKind::Name,
-      value: "(add 1 2)".to_owned()
-    }),
+    parser(vec!(
+      Token::Paren {
+        value: "(".to_owned()
+      },
+      Token::Name {
+        value: "add".to_owned()
+      },
+      Token::Number {
+        value: "1".to_owned()
+      },
+      Token::Number {
+        value: "2".to_owned()
+      },
+      Token::Paren {
+        value: ")".to_owned()
+      }
+    )),
     Ast {
-      kind: Node::Program,
       body: vec!(Node::CallExpression {
-        name: "add",
+        name: "add".to_owned(),
         params: vec!(
-          Node::NumberLiteral { value: "1" },
-          Node::NumberLiteral { value: "2" }
+          Node::NumberLiteral {
+            value: "1".to_owned()
+          },
+          Node::NumberLiteral {
+            value: "2".to_owned()
+          }
         )
       })
     }

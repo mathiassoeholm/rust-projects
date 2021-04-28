@@ -1,24 +1,19 @@
 #[derive(Debug, PartialEq)]
-pub enum TokenKind {
-  Paren,
-  Name,
-  Number,
-  String,
+pub enum Token {
+  Paren { value: String },
+  Name { value: String },
+  Number { value: String },
+  String { value: String },
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Token {
-  pub kind: TokenKind,
-  pub value: String,
+pub enum Node {
+  Program { body: Vec<Node> },
+  CallExpression { name: String, params: Vec<Node> },
+  NumberLiteral { value: String },
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Node<'a> {
-  CallExpression {
-    name: &'a String,
-    params: Vec<Node<'a>>,
-  },
-  NumberLiteral {
-    value: &'a String,
-  },
+pub struct Ast {
+  body: Vec<Node>,
 }
