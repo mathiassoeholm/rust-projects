@@ -1,84 +1,94 @@
 use super::models::Token;
 use regex::Regex;
 
-pub fn tokenizer(input: &str) -> Result<Vec<Token>, String> {
-  let mut current = 0;
-  let mut tokens = Vec::new();
-  let white_space_regex = Regex::new(r"\s").unwrap();
-  let number_regex = Regex::new(r"[0-9]").unwrap();
-  let letters_regex = Regex::new(r"(?i)[a-z]").unwrap();
+// static white_space_regex: Regex = Regex::new(r"\s").unwrap();
+// static number_regex: Regex = Regex::new(r"[0-9]").unwrap();
+// static letters_regex: Regex = Regex::new(r"(?i)[a-z]").unwrap();
 
-  let chars: Vec<char> = input.chars().collect();
-  while current < input.len() {
-    let mut ch = chars[current];
+pub fn tokenizer<'a>(input: &'a str) -> Result<impl Iterator<Item = Token<'a>>, String> {
+  let ret = input.char_indices().filter_map(move |(i, c)| match c {
+    ' ' => None,
+    _ => Some(Token::Name {
+      value: &input[i..(i + 1)],
+    }),
+  });
 
-    if ch == '(' || ch == ')' {
-      tokens.push(Token::Paren {
-        value: String::from(ch),
-      });
+  Ok(ret)
+  // let white_space_regex = Regex::new(r"\s").unwrap();
+  // let number_regex = Regex::new(r"[0-9]").unwrap();
+  // let letters_regex = Regex::new(r"(?i)[a-z]").unwrap();
 
-      current += 1;
-      continue;
-    }
+  // let chars: Vec<char> = input.charks().collect();
+  // while current < input.len() {
+  //   let mut ch = chars[current];
 
-    if white_space_regex.is_match(&String::from(ch)) {
-      current += 1;
-      continue;
-    }
+  //   if ch == '(' || ch == ')' {
+  //     tokens.push(Token::Paren {
+  //       value: String::from(ch),
+  //     });
 
-    if number_regex.is_match(&String::from(ch)) {
-      let mut value = Vec::new();
+  //     current += 1;
+  //     continue;
+  //   }
 
-      while number_regex.is_match(&String::from(ch)) {
-        value.push(ch);
-        current += 1;
-        ch = chars[current];
-      }
+  //   if white_space_regex.is_match(&String::from(ch)) {
+  //     current += 1;
+  //     continue;
+  //   }
 
-      tokens.push(Token::Number {
-        value: value.iter().collect(),
-      });
+  //   if number_regex.is_match(&String::from(ch)) {
+  //     let mut value = Vec::new();
 
-      continue;
-    }
+  //     while number_regex.is_match(&String::from(ch)) {
+  //       value.push(ch);
+  //       current += 1;
+  //       ch = chars[current];
+  //     }
 
-    if ch == '"' {
-      let mut value = Vec::new();
+  //     tokens.push(Token::Number {
+  //       value: value.iter().collect(),
+  //     });
 
-      current += 1;
-      ch = chars[current];
+  //     continue;
+  //   }
 
-      while ch != '"' {
-        value.push(ch);
-        current += 1;
-        ch = chars[current];
-      }
+  //   if ch == '"' {
+  //     let mut value = Vec::new();
 
-      tokens.push(Token::String {
-        value: value.iter().collect(),
-      });
+  //     current += 1;
+  //     ch = chars[current];
 
-      continue;
-    }
+  //     while ch != '"' {
+  //       value.push(ch);
+  //       current += 1;
+  //       ch = chars[current];
+  //     }
 
-    if letters_regex.is_match(&String::from(ch)) {
-      let mut value = Vec::new();
+  //     tokens.push(Token::String {
+  //       value: value.iter().collect(),
+  //     });
 
-      while letters_regex.is_match(&String::from(ch)) {
-        value.push(ch);
-        current += 1;
-        ch = chars[current];
-      }
+  //     continue;
+  //   }
 
-      tokens.push(Token::Name {
-        value: value.iter().collect(),
-      });
+  //   if letters_regex.is_match(&String::from(ch)) {
+  //     let mut value = Vec::new();
 
-      continue;
-    }
+  //     while letters_regex.is_match(&String::from(ch)) {
+  //       value.push(ch);
+  //       current += 1;
+  //       ch = chars[current];
+  //     }
 
-    return Err(format!("I don't know what this character is: {}", ch));
-  }
+  //     tokens.push(Token::Name {
+  //       value: value.iter().collect(),
+  //     });
 
-  Ok(tokens)
+  //     continue;
+  //   }
+
+  //   return Err(format!("I don't know what this character is: {}", ch));
+  // }
+
+  // Ok(tokens)
 }

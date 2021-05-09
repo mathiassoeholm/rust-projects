@@ -1,9 +1,9 @@
 #[derive(Debug, PartialEq)]
-pub enum Token {
-  Paren { value: String },
-  Name { value: String },
-  Number { value: String },
-  String { value: String },
+pub enum Token<'a> {
+  Paren { value: &'a str },
+  Name { value: &'a str },
+  Number { value: &'a str },
+  String { value: &'a str },
 }
 
 #[derive(Debug, PartialEq)]
