@@ -3,14 +3,32 @@ use regex::Regex;
 
 // static white_space_regex: Regex = Regex::new(r"\s").unwrap();
 // static number_regex: Regex = Regex::new(r"[0-9]").unwrap();
-// static letters_regex: Regex = Regex::new(r"(?i)[a-z]").unwrap();
 
 pub fn tokenizer<'a>(input: &'a str) -> Result<impl Iterator<Item = Token<'a>>, String> {
-  let ret = input.char_indices().filter_map(move |(i, c)| match c {
-    ' ' => None,
-    _ => Some(Token::Name {
-      value: &input[i..(i + 1)],
-    }),
+  let letters_regex: Regex = Regex::new(r"(?i)[a-z]").unwrap();
+
+  let mut letter_start = None;
+
+  let ret = input.char_indices().filter_map(move |(i, c)| {
+    let token = match c {
+      ' ' => None,
+      '(' => Some(Token::Paren {
+        value: &input[i..(i + 1)],
+      }),
+      _ if letters_regex.is_match(&input[i..(i + 1)]) => {
+        letter_start = Some(letter_start.unwrap_or(i));
+        if i + 1 == input.len() || !letters_regex.is_match(&input[(i + 1)..(i + 2)]) {
+          Some(Token::Name {
+            value: &input[letter_start.unwrap()..(i + 1)],
+          })
+        } else {
+          None
+        }
+      }
+      _ => None,
+    };
+
+    token
   });
 
   Ok(ret)
