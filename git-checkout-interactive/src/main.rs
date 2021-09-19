@@ -1,13 +1,20 @@
 use regex::Regex;
-use std::process::Command;
 
-fn print_menu(branches: &Vec<String>, selection: usize) {
+use std::{
+    io::{stdin, stdout, Stdout, Write},
+    process::Command,
+};
+use termion::event::Key;
+use termion::raw::IntoRawMode;
+use termion::{input::TermRead, raw::RawTerminal};
+
+fn print_menu(stdout: &mut RawTerminal<Stdout>, branches: &Vec<String>, selection: usize) {
     for (index, branch) in branches.into_iter().enumerate() {
         if index == selection {
-            print!("👉 ");
+            write!(stdout, "👉 ").unwrap();
         };
 
-        print!("{}\n", branch);
+        write!(stdout, "{}\r\n", branch).unwrap();
     }
 }
 
@@ -27,16 +34,42 @@ fn main() {
         .map(|capture| String::from(&capture[1]))
         .collect();
 
-    let branches_len = branches.len();
-    let clear_menu = || {
-        print!("\x1B[{}A", branches_len);
-    };
+    // let clear_menu = || {
+    //     print!("\x1B[{}A", branches_len);
+    // };
 
     let mut selection = 0;
 
-    print_menu(&branches, selection);
-    clear_menu();
-    print_menu(&branches, selection);
-    clear_menu();
-    print_menu(&branches, selection);
+    let stdin = stdin();
+    let mut stdout = stdout().into_raw_mode().unwrap();
+
+    // print_menu(&branches, selection);
+    // print_menu(&branches, selection);
+
+    for c in stdin.keys() {
+        match c.unwrap() {
+            Key::Char('\n') => print!("Enter"),
+            Key::Ctrl(c) => break,
+            Key::Up => {
+                selection = if selection == 0 {
+                    branches.len() - 1
+                } else {
+                    selection - 1
+                };
+            }
+            Key::Down => {
+                selection += 1;
+                selection %= branches.len();
+            }
+            _ => {}
+        }
+
+        print_menu(&mut stdout, &branches, selection);
+
+        stdout.flush().unwrap();
+
+        write!(stdout, "\x1B[{}A", branches.len()).unwrap();
+
+        // cursor::Up(branches.len() as u16);
+    }
 }
