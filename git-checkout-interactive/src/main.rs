@@ -8,16 +8,6 @@ use termion::event::Key;
 use termion::raw::IntoRawMode;
 use termion::{input::TermRead, raw::RawTerminal};
 
-fn print_menu(stdout: &mut RawTerminal<Stdout>, branches: &Vec<String>, selection: usize) {
-    for (index, branch) in branches.into_iter().enumerate() {
-        if index == selection {
-            write!(stdout, "👉 ").unwrap();
-        };
-
-        write!(stdout, "{}\r\n", branch).unwrap();
-    }
-}
-
 fn main() {
     // Get recently checked out branches
     // Show interactive menu with list of branches
@@ -30,21 +20,35 @@ fn main() {
     let regex = Regex::new(r"moving from ([^ ]*)").unwrap();
     let branches: Vec<_> = regex
         .captures_iter(&*output)
-        .take(5)
+        .take(8)
         .map(|capture| String::from(&capture[1]))
         .collect();
 
-    // let clear_menu = || {
-    //     print!("\x1B[{}A", branches_len);
-    // };
+    if branches.len() == 0 {
+        println!("The reflog is empty, you never switched branch");
+        return;
+    }
 
     let mut selection = 0;
 
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    // print_menu(&branches, selection);
-    // print_menu(&branches, selection);
+    let print_menu = |buffer: &mut RawTerminal<Stdout>, branches: &Vec<String>, selection| {
+        for (index, branch) in branches.into_iter().enumerate() {
+            if index == selection {
+                write!(buffer, "👉 ").unwrap();
+            } else {
+                write!(buffer, "   ").unwrap();
+            };
+
+            write!(buffer, "{}\r\n", branch).unwrap();
+        }
+        buffer.flush().unwrap();
+        write!(buffer, "\x1B[{}A", branches.len()).unwrap()
+    };
+
+    print_menu(&mut stdout, &branches, selection);
 
     for c in stdin.keys() {
         match c.unwrap() {
@@ -65,11 +69,5 @@ fn main() {
         }
 
         print_menu(&mut stdout, &branches, selection);
-
-        stdout.flush().unwrap();
-
-        write!(stdout, "\x1B[{}A", branches.len()).unwrap();
-
-        // cursor::Up(branches.len() as u16);
     }
 }
