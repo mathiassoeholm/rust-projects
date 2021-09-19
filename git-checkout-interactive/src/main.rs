@@ -9,10 +9,6 @@ use termion::raw::IntoRawMode;
 use termion::{input::TermRead, raw::RawTerminal};
 
 fn main() {
-    // Get recently checked out branches
-    // Show interactive menu with list of branches
-    // Checkout selected branch
-
     let output = Command::new("git").arg("reflog").output().unwrap();
 
     let output = String::from_utf8_lossy(&output.stdout);
@@ -28,6 +24,8 @@ fn main() {
         println!("The reflog is empty, you never switched branch");
         return;
     }
+
+    println!("Select a branch:");
 
     let mut selection = 0;
 
@@ -50,10 +48,15 @@ fn main() {
 
     print_menu(&mut stdout, &branches, selection);
 
+    let mut cancelled = false;
+
     for c in stdin.keys() {
         match c.unwrap() {
-            Key::Char('\n') => print!("Enter"),
-            Key::Ctrl(c) => break,
+            Key::Char('\n') => break,
+            Key::Ctrl(c) => {
+                cancelled = true;
+                break;
+            }
             Key::Up => {
                 selection = if selection == 0 {
                     branches.len() - 1
@@ -69,5 +72,9 @@ fn main() {
         }
 
         print_menu(&mut stdout, &branches, selection);
+    }
+
+    if !cancelled {
+        println!("You chose {}", branches[selection]);
     }
 }
