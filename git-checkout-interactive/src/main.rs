@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use regex::Regex;
 
 use std::{
@@ -13,11 +14,14 @@ fn main() {
 
     let output = String::from_utf8_lossy(&output.stdout);
 
-    let regex = Regex::new(r"moving from ([^ ]*)").unwrap();
+    let regex = Regex::new(r"moving from ([^ ]*) to (.*)").unwrap();
+    let current_branch = regex.captures(&*output).unwrap().get(2).unwrap().as_str();
+
     let branches: Vec<_> = regex
         .captures_iter(&*output)
-        .take(8)
         .map(|capture| String::from(&capture[1]))
+        .filter(|branch| branch != current_branch)
+        .unique()
         .collect();
 
     if branches.len() == 0 {
