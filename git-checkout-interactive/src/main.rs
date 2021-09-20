@@ -43,7 +43,12 @@ fn main() {
             write!(buffer, "{}\r\n", branch).unwrap();
         }
         buffer.flush().unwrap();
-        write!(buffer, "\x1B[{}A", branches.len()).unwrap()
+
+        // Get ready to re-print the menu by moving cursor back...
+        write!(buffer, "\x1B[{}A", branches.len()).unwrap();
+        // ...and clearing everything after the cursor
+        write!(buffer, "\x1B[0J").unwrap();
+        // Buffer is not flushed yet, so menu is still printed
     };
 
     print_menu(&mut stdout, &branches, selection);
@@ -75,6 +80,13 @@ fn main() {
     }
 
     if !cancelled {
-        println!("You chose {}", branches[selection]);
+        write!(stdout, "You chose {}\r\n", branches[selection]).unwrap();
+        stdout.flush().unwrap();
+
+        Command::new("git")
+            .arg("checkout")
+            .arg(&branches[selection])
+            .status()
+            .unwrap();
     }
 }
