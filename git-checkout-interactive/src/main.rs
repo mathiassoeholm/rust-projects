@@ -2,6 +2,7 @@ use itertools::Itertools;
 use regex::Regex;
 
 use std::{
+    cmp,
     io::{stdin, stdout, Stdout, Write},
     process::Command,
 };
@@ -31,31 +32,34 @@ fn main() {
 
     println!("Select a branch:");
 
+    let menu_size = cmp::min(5, branches.len());
     let mut selection = 0;
+    let mut scroll = 0;
 
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
 
-    let print_menu = |buffer: &mut RawTerminal<Stdout>, branches: &Vec<String>, selection| {
-        for (index, branch) in branches.into_iter().enumerate() {
-            if index == selection {
-                write!(buffer, "👉 ").unwrap();
-            } else {
-                write!(buffer, "   ").unwrap();
-            };
+    let print_menu =
+        |buffer: &mut RawTerminal<Stdout>, branches: &Vec<String>, selection, scroll| {
+            for (index, branch) in branches.into_iter().enumerate().skip(scroll).take(5) {
+                if index == selection {
+                    write!(buffer, "👉 ").unwrap();
+                } else {
+                    write!(buffer, "   ").unwrap();
+                };
 
-            write!(buffer, "{}\r\n", branch).unwrap();
-        }
-        buffer.flush().unwrap();
+                write!(buffer, "{}\r\n", branch).unwrap();
+            }
+            buffer.flush().unwrap();
 
-        // Get ready to re-print the menu by moving cursor back...
-        write!(buffer, "\x1B[{}A", branches.len()).unwrap();
-        // ...and clearing everything after the cursor
-        write!(buffer, "\x1B[0J").unwrap();
-        // Buffer is not flushed yet, so menu is still printed
-    };
+            // Get ready to re-print the menu by moving cursor back...
+            write!(buffer, "\x1B[{}A", menu_size).unwrap();
+            // ...and clearing everything after the cursor
+            write!(buffer, "\x1B[0J").unwrap();
+            // Buffer is not flushed yet, so menu is still printed
+        };
 
-    print_menu(&mut stdout, &branches, selection);
+    print_menu(&mut stdout, &branches, selection, scroll);
 
     let mut cancelled = false;
 
@@ -66,21 +70,25 @@ fn main() {
                 cancelled = true;
                 break;
             }
-            Key::Up => {
-                selection = if selection == 0 {
-                    branches.len() - 1
-                } else {
-                    selection - 1
-                };
+            Key::Up if selection > 0 => {
+                selection -= 1;
+
+                if selection < scroll {
+                    scroll -= 1;
+                }
             }
-            Key::Down => {
+            Key::Down if selection < branches.len() - 1 => {
                 selection += 1;
                 selection %= branches.len();
+
+                if selection >= scroll + menu_size {
+                    scroll += 1;
+                }
             }
             _ => {}
         }
 
-        print_menu(&mut stdout, &branches, selection);
+        print_menu(&mut stdout, &branches, selection, scroll);
     }
 
     if !cancelled {
