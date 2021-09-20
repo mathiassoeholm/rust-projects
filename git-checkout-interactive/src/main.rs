@@ -16,7 +16,14 @@ fn main() {
     let output = String::from_utf8_lossy(&output.stdout);
 
     let regex = Regex::new(r"moving from ([^ ]*) to (.*)").unwrap();
-    let current_branch = regex.captures(&*output).unwrap().get(2).unwrap().as_str();
+
+    let res = regex.captures(&*output);
+    if let None = res {
+        println!("The reflog is empty, you never switched branch");
+        return;
+    };
+
+    let current_branch = res.unwrap().get(2).unwrap().as_str();
 
     let branches: Vec<_> = regex
         .captures_iter(&*output)
@@ -24,11 +31,6 @@ fn main() {
         .filter(|branch| branch != current_branch)
         .unique()
         .collect();
-
-    if branches.len() == 0 {
-        println!("The reflog is empty, you never switched branch");
-        return;
-    }
 
     println!("Select a branch:");
 
