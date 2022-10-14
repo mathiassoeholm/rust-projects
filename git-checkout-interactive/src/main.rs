@@ -72,14 +72,14 @@ fn main() {
                 cancelled = true;
                 break;
             }
-            Key::Up if selection > 0 => {
+            Key::Up | Key::Char('k') if selection > 0 => {
                 selection -= 1;
 
                 if selection < scroll {
                     scroll -= 1;
                 }
             }
-            Key::Down if selection < branches.len() - 1 => {
+            Key::Down | Key::Char('j') if selection < branches.len() - 1 => {
                 selection += 1;
                 selection %= branches.len();
 
